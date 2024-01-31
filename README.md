@@ -1,1 +1,1 @@
-<center>用于不同的地方学习python爬虫之间的代码同步</center>>
+<center>用于不同的地方学习python爬虫之间的代码同步</center>
