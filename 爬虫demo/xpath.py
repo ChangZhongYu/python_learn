@@ -14,7 +14,7 @@ from lxml import etree
 
 # 创建对象
 
-URL = "https://dimtown.com/cosplay"
+URL = "https://dimtown.com/cosplay/page/2"
 headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
@@ -45,13 +45,13 @@ for ul in ul_list:
             # 下载图片
             res_img = requests.get(img_url, headers=headers)
             name = img_url.split("/")[-1]
-            with open("img/" + name, "wb") as f:
+            with open("../resources/img2/" + name, "wb") as f:
                 f.write(res_img.content)
             print(f"下载完成：{name}")
 
             res_img.close()
             # 防止爬虫速度过快
-            time.sleep(1)
+            # time.sleep(1)
             # break 用于测试
         print(f"*********************下载图组完成：{title}***********************")
         res.close()
