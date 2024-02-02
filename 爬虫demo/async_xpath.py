@@ -18,7 +18,6 @@ def get_img_info(url, headers):
     print('-' * 30, '开始抓取图片信息', '-' * 30)
     url_list = []
     response = requests.get(url, headers=headers)
-    # print(response.text)
     html = etree.HTML(response.text)
     ul_list = html.xpath('//*[@id="index_ajax_list"]/li/div')
     for ul in ul_list:
@@ -80,7 +79,6 @@ async def main():
     img_url_lists = get_img_url(img_info_list, headers)
     for img_url in await img_url_lists:
         tasks.append(asyncio.create_task(download_img(img_url, headers)))
-        # break
     await asyncio.wait(tasks)
 
 
