@@ -12,7 +12,7 @@ class MyFunction:
     """
 
     @staticmethod
-    def File_writing(path, content):
+    def file_writing(path, content):
         try:
             with open(path, mode='wb') as f:
                 f.write(content)

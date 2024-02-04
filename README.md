@@ -10,3 +10,13 @@
     
 
 ​		在网页爬取了一个m3u8文件，想将里面的.ts链接提取出来，输出的.ts链接鼠标点击可以正常访问，但接下来在代码里用get请求返回的结果却是404。可能是因为循环地给m3u8_url拼接的line中含有某些空白字符导致get请求无法顺利执行,这时候就要用到strip()函数来将m3u8_url链接前后看不见的隐形空白字符给去掉。
+
+使用ffmpeg时要注意input文件是否和ts文件同层级否则会报以下错误
+
+```
+[concat @ 0000026a5ef86040] No files to concat
+[in#0 @ 0000026a5ef85cc0] Error opening input: Invalid data found when processing input
+Error opening input file C:/Project/PycharmProjects/Python_Instance/resources/input.txt.
+Error opening input files: Invalid data found when processing input
+```
+

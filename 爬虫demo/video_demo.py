@@ -1,6 +1,8 @@
 """
     抓取视频案例
 """
+import concurrent
+
 import requests
 import re
 import json
@@ -28,7 +30,7 @@ def get_m3u8_url(url, headers):
     re_obj = re.compile(r'let obj =(?P<m3u8>.*?);', re.S)
     m3u8_url_dirc = json.loads(re_obj.findall(res_html.text)[0])
     # 这里将请求页面写到本地，防止debug频繁访问被封 str>bytes encode(); bytes>str  decode()
-    MyFunction.File_writing("../resource/index.html", res_html.text.encode())
+    MyFunction.file_writing("../resources/index.html", res_html.text.encode())
     return m3u8_url_dirc
 
 
@@ -88,7 +90,7 @@ def download_video_1(m3u8_url, headers):
 
 
 def merge_m3u8_ts(inpath, outpath):
-    dos = f'ffmpeg -f concat -safe 0 -i {inpath} -c copy {outpath} +{str(round(int(time.time() * 1000)))}.mp4'
+    dos = f'ffmpeg -f concat -safe 0 -i {inpath} -c copy {outpath}{str(round(int(time.time() * 1000)))}.mp4'
     print(dos)
     os.system(dos)
     print('视频合并完成')
@@ -119,20 +121,23 @@ def mian():
     # async with aiohttp.ClientSession() as session:
 
     config.headers.update({'Referer': 'https://www.yingshi.tv/', 'Origin': 'https://www.yingshi.tv'})
-    with ThreadPoolExecutor(4) as thread_pool:
+    with ThreadPoolExecutor(8) as thread_pool:
         for video_url_list in videos_url_list:
             with open(config.input_path, mode='w') as f:
                 for video_url in video_url_list:
-                    print(video_url)
                     # 将所有的切片文件名拼接，后续用于合并视频
                     f.write("file '" + video_url.split("/")[-1] + "'" + "\n")
+                    # 单线程下载
+                    # download_video_1(video_url, headers=config.headers)
                     # 多线程同步下载
-                    thread_pool.submit(download_video_1, m3u8_url=video_url, headers=config.headers)
                     print(video_url)
+                    futures = [thread_pool.submit(download_video_1, m3u8_url=video_url, headers=config.headers)]
                     # break  # 测试下载一个切片
                     # 异步下载
                     # tasks.append(asyncio.create_task(download_video(video_url, headers, session)))
                 # await asyncio.wait(tasks)
+                # 等待所有子线程完成任务
+                concurrent.futures.wait(futures)
                 merge_m3u8_ts(config.input_path, config.output_path)
             break
 
