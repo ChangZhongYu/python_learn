@@ -1,0 +1,7 @@
+URL: "https://www.yingshi.tv/vod/play/id/197245/sid/1/nid/1.html"
+input_path: "D:/pythonProject/Python_Instance/resource/input.txt"
+output_path: "D:/pythonProject/Python_Instance/resource/video/"
+ts_path: "../resource/video_ts/"
+headers:
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+
