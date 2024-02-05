@@ -9,12 +9,12 @@ import json
 # import asyncio
 # import aiohttp
 import aiofiles
-import os
 import logging
 from yarl import URL
 from concurrent.futures import ThreadPoolExecutor
 import time
 from mytool.MyFunction import MyFunction
+import subprocess
 
 
 # 获取m3u8文件地址
@@ -77,12 +77,12 @@ async def download_video(m3u8_url, headers, session):
     print(f'异步下载{name}完成')
 
 
-def download_video_1(m3u8_url, file_path, headers):
+def download_video_1(m3u8_url, file_path, file_name, headers):
     # 可能存在不可见的空白符
     m3u8_url = m3u8_url.strip()
     res_video = requests.get(m3u8_url, headers=headers)
     print(res_video.status_code)
-    name = file_path + m3u8_url.split('/')[-1]
+    name = file_path + file_name + "." + m3u8_url.split('.')[-1]
     with open(name, mode='wb') as f:
         f.write(res_video.content)
     print(f'{name}下载完成')
@@ -90,9 +90,20 @@ def download_video_1(m3u8_url, file_path, headers):
 
 
 def merge_m3u8_ts(inpath, outpath):
-    dos = f'ffmpeg -f concat -safe 0 -i {inpath} -c copy {outpath}{str(round(int(time.time() * 1000)))}.mp4'
-    print(dos)
-    os.system(dos)
+    dos = f'ffmpeg -f concat -i {inpath} -c copy {outpath}{str(round(int(time.time() * 1000)))}.mp4'
+
+    ffmpeg_command = [
+        'ffmpeg',  # FFmpeg可执行文件名，如果已加入环境变量则可以直接使用
+        '-i', inpath,  # 输入部分，指定待合并的ts文件列表
+        '-c', 'copy',  # 复制音视频流，不进行转码（假设源文件编码一致）
+        '-bsf:a', 'aac_adtstoasc',  # 对于某些AAC音频流，需要添加此选项才能正确合并
+        outpath  # 输出文件路径
+    ]
+    # print(dos)
+    if subprocess.run(dos, text=True).returncode == 0:
+        print("TS文件合并成功")
+    else:
+        print("TS文件合并过程中发生错误！")
     print('视频合并完成')
 
 
@@ -107,6 +118,7 @@ def mian():
 
     # 遍历字典，获取到每个视频的所有ts文件下载地址
     videos_url_list = []
+    flag = 0
     for key in m3u8_url_dirc.keys():
         # 获取该视频的所有m3u8文件地址
         m3u8_url = m3u8_url_dirc[key]["url"]
@@ -114,36 +126,46 @@ def mian():
         m3u8_name = download_m3u8(m3u8_url, config.ts_path, config.headers)
         # 调用方法，传入m3u8文件名，读取m3u8文件，获取该视屏所有切片的地址，存入list
         videos_url_list.append(read_m3u8(m3u8_name, m3u8_url, config.ts_path, config.headers))
-        break  # 测试下载一个视频
+        flag += 1
+        if flag < 2:
+            break
 
     # tasks = []    #存储异步任务
     # 为了不频繁创建session，所以在外面创建好后传递给请求
     # async with aiohttp.ClientSession() as session:
 
     config.headers.update({'Referer': 'https://www.yingshi.tv/', 'Origin': 'https://www.yingshi.tv'})
-    with ThreadPoolExecutor(8) as thread_pool:
+    tag = 1
+    with ThreadPoolExecutor(16) as thread_pool:
         for video_url_list in videos_url_list:
-            with open(config.input_path, mode='w') as f:
+            with open(config.input_path + f"input{tag}.txt", mode='w') as f:
+                tag2 = 1
                 for video_url in video_url_list:
+                    file_name = f"{str(tag)}-{str(tag2)}"
                     # 将所有的切片文件名拼接，后续用于合并视频
-                    f.write("file '" + video_url.split("/")[-1] + "'" + "\n")
+                    f.write("file '" + file_name + "." + video_url.split(".")[-1] + "'" + "\n")
                     # 单线程下载
                     # download_video_1(video_url, headers=config.headers)
                     # 多线程同步下载
                     print(video_url)
-                    futures = [thread_pool.submit(download_video_1, video_url, config.ts_path, config.headers)]
+                    futures = [
+                        thread_pool.submit(download_video_1, video_url, config.ts_path, file_name, config.headers)]
+                    tag2 += 1
                     # break  # 测试下载一个切片
                     # 异步下载
                     # tasks.append(asyncio.create_task(download_video(video_url, headers, session)))
-                # await asyncio.wait(tasks)
-                # 等待所有子线程完成任务
+                    # await asyncio.wait(tasks)
+                    # 等待所有子线程完成任务
                 concurrent.futures.wait(futures)
-                merge_m3u8_ts(config.input_path, config.output_path)
-            break
+                merge_m3u8_ts(config.input_path + f"input{tag}.txt", config.output_path)
+                tag += 1
+                # if tag > 2:
+                #     break
 
 
 if __name__ == '__main__':
     print(f'开始时间：{time.strftime('%X')}')
     mian()
-    print('程序结束')
-    print(f'开始时间：{time.strftime('%X')}')
+    print("程序结束")
+    print(f'结束时间：{time.strftime('%X')}')
+    # capture_output = True

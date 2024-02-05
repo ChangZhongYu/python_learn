@@ -20,3 +20,13 @@ Error opening input file C:/Project/PycharmProjects/Python_Instance/resources/in
 Error opening input files: Invalid data found when processing input
 ```
 
+2月5日，在继续优化video_demo时发现了两个问题：
+
+- ```python
+  concurrent.futures.wait(futures) 
+  并不能等到所有子线程完成任务后执行
+  ```
+
+  ![image-20240205230702134](C:\Users\zhong\AppData\Roaming\Typora\typora-user-images\image-20240205230702134.png)
+
+- 其次是有些视频切片合并时会出问题，尤其是B站的视频，应该和编码参数有关系
