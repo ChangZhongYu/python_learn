@@ -91,20 +91,19 @@ def download_video_1(m3u8_url, file_path, file_name, headers):
 
 def merge_m3u8_ts(inpath, outpath):
     dos = f'ffmpeg -f concat -i {inpath} -c copy {outpath}{str(round(int(time.time() * 1000)))}.mp4'
-
+    out_path = f'{outpath}{str(round(int(time.time() * 1000)))}.mp4'
     ffmpeg_command = [
         'ffmpeg',  # FFmpeg可执行文件名，如果已加入环境变量则可以直接使用
         '-i', inpath,  # 输入部分，指定待合并的ts文件列表
         '-c', 'copy',  # 复制音视频流，不进行转码（假设源文件编码一致）
         '-bsf:a', 'aac_adtstoasc',  # 对于某些AAC音频流，需要添加此选项才能正确合并
-        outpath  # 输出文件路径
+        out_path  # 输出文件路径
     ]
-    # print(dos)
-    if subprocess.run(dos, text=True).returncode == 0:
+    print(dos)
+    if subprocess.run(ffmpeg_command, text=True).returncode == 0:
         print("TS文件合并成功")
     else:
         print("TS文件合并过程中发生错误！")
-    print('视频合并完成')
 
 
 # 程序入口
@@ -140,23 +139,24 @@ def mian():
         for video_url_list in videos_url_list:
             with open(config.input_path + f"input{tag}.txt", mode='w') as f:
                 tag2 = 1
+                file_names = []
                 for video_url in video_url_list:
                     file_name = f"{str(tag)}-{str(tag2)}"
+                    file_names.append(file_name)
                     # 将所有的切片文件名拼接，后续用于合并视频
                     f.write("file '" + file_name + "." + video_url.split(".")[-1] + "'" + "\n")
                     # 单线程下载
                     # download_video_1(video_url, headers=config.headers)
                     # 多线程同步下载
                     print(video_url)
-                    futures = [
-                        thread_pool.submit(download_video_1, video_url, config.ts_path, file_name, config.headers)]
+                    thread_pool.submit(download_video_1, video_url, config.ts_path, file_name, config.headers)
                     tag2 += 1
                     # break  # 测试下载一个切片
                     # 异步下载
                     # tasks.append(asyncio.create_task(download_video(video_url, headers, session)))
                     # await asyncio.wait(tasks)
-                    # 等待所有子线程完成任务
-                concurrent.futures.wait(futures)
+                # 等待所有子线程完成任务
+                thread_pool.shutdown(True)
                 merge_m3u8_ts(config.input_path + f"input{tag}.txt", config.output_path)
                 tag += 1
                 # if tag > 2:
