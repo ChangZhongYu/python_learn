@@ -77,12 +77,12 @@ async def download_video(m3u8_url, headers, session):
     print(f'异步下载{name}完成')
 
 
-def download_video_1(m3u8_url, headers):
+def download_video_1(m3u8_url, file_path, headers):
     # 可能存在不可见的空白符
     m3u8_url = m3u8_url.strip()
     res_video = requests.get(m3u8_url, headers=headers)
     print(res_video.status_code)
-    name = '../resources/video/' + m3u8_url.split('/')[-1]
+    name = file_path + m3u8_url.split('/')[-1]
     with open(name, mode='wb') as f:
         f.write(res_video.content)
     print(f'{name}下载完成')
@@ -131,7 +131,7 @@ def mian():
                     # download_video_1(video_url, headers=config.headers)
                     # 多线程同步下载
                     print(video_url)
-                    futures = [thread_pool.submit(download_video_1, m3u8_url=video_url, headers=config.headers)]
+                    futures = [thread_pool.submit(download_video_1, video_url, config.ts_path, config.headers)]
                     # break  # 测试下载一个切片
                     # 异步下载
                     # tasks.append(asyncio.create_task(download_video(video_url, headers, session)))

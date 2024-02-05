@@ -79,3 +79,4 @@ fabric.properties
 
 /resource/
 /resources/
+!/other/file_config.yaml
