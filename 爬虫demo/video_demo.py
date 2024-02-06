@@ -15,6 +15,8 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 from mytool.MyFunction import MyFunction
 import subprocess
+import csv
+import codecs
 
 
 # 获取m3u8文件地址
@@ -24,14 +26,37 @@ import subprocess
 
 # 获取包含该视频的所有m3u8的字典
 def get_m3u8_url(url, headers):
-    res_html = requests.get(url, headers=headers)
-    res_html.encoding = "utf-8"
-    # re_obj = re.compile(r'let obj = {"1":{"name":"1080P","url":"(?P<url>.*?)"', re.S)
-    re_obj = re.compile(r'let obj =(?P<m3u8>.*?);', re.S)
-    m3u8_url_dirc = json.loads(re_obj.findall(res_html.text)[0])
-    # 这里将请求页面写到本地，防止debug频繁访问被封 str>bytes encode(); bytes>str  decode()
-    MyFunction.file_writing("../resources/index.html", res_html.text.encode())
-    return m3u8_url_dirc
+    name = '-'.join(re.compile(r'\d+').findall(url))
+    # 以下代码是防止debug频繁访问被封，基本的逻辑是record.csv中记录访问过的网址和时间，
+    # 首次访问或者上次访问时间较长时则发起新的请求，否则读取上次请求的html页面
+    read_file = codecs.open("../resources/record.csv", encoding="utf-8")
+    line_dirc = csv.reader(read_file)
+    dics = {}
+    for line in line_dirc:
+        if not line:
+            continue
+        dics.update({line[0]: line[1]})
+    print(dics)
+    read_file.close()
+    # 首次访问或者上次访问以过5分钟以上则重新发送请求，将页面写到本地，并在record.csv记录，否注解读取本地html
+    if url not in dics.keys() or round(int(time.time() * 1000)) - int(dics[url]) > 300 * 1000:
+        res_html = requests.get(url, headers=headers)
+        res_html.encoding = "utf-8"
+        # 这里将请求页面写到本地，防止debug频繁访问被封 str>bytes encode(); bytes>str  decode()
+        MyFunction.file_writing(f"../resources/{name}.html", res_html.text.encode())
+        re_obj = re.compile(r'let obj =(?P<m3u8>.*?);', re.S)
+        m3u8_url_dirc = json.loads(re_obj.findall(res_html.text)[0])
+        # 将本次访问的URL和时间戳记录在record.csv
+        writer_fiel = open("../resources/record.csv", "a", encoding="utf-8", newline="")
+        writer_obj = csv.writer(writer_fiel)
+        writer_obj.writerow([url, str(round(int(time.time() * 1000)))])
+        writer_fiel.close()
+        return m3u8_url_dirc
+    else:
+        with open(f"../resources/{name}.html", "r") as r:
+            re_obj = re.compile(r'let obj =(?P<m3u8>.*?);', re.S)
+            m3u8_url_dirc = json.loads(re_obj.findall(r.read())[0])
+        return m3u8_url_dirc
 
 
 # 下载m3u8文件
@@ -165,7 +190,10 @@ def mian():
 
 if __name__ == '__main__':
     print(f'开始时间：{time.strftime('%X')}')
-    mian()
-    print("程序结束")
-    print(f'结束时间：{time.strftime('%X')}')
-    # capture_output = True
+    # mian()
+    config = MyFunction.read_file_config()
+    m3u8_url_dirc = get_m3u8_url(config.html_url, config.headers)
+    for key in m3u8_url_dirc.keys():
+        print(m3u8_url_dirc[key])
+    print('程序结束')
+    print(f'开始时间：{time.strftime('%X')}')
