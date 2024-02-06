@@ -53,7 +53,7 @@ def get_m3u8_url(url, headers):
         writer_fiel.close()
         return m3u8_url_dirc
     else:
-        with open(f"../resources/{name}.html", "r") as r:
+        with open(f"../resources/{name}.html", "r", encoding="utf-8") as r:
             re_obj = re.compile(r'let obj =(?P<m3u8>.*?);', re.S)
             m3u8_url_dirc = json.loads(re_obj.findall(r.read())[0])
         return m3u8_url_dirc
@@ -116,6 +116,7 @@ def download_video_1(m3u8_url, file_path, file_name, headers):
 
 def merge_m3u8_ts(inpath, outpath):
     dos = f'ffmpeg -f concat -i {inpath} -c copy {outpath}{str(round(int(time.time() * 1000)))}.mp4'
+    dos_cmd = dos.replace("'", "")
     out_path = f'{outpath}{str(round(int(time.time() * 1000)))}.mp4'
     ffmpeg_command = [
         'ffmpeg',  # FFmpeg可执行文件名，如果已加入环境变量则可以直接使用
@@ -124,8 +125,8 @@ def merge_m3u8_ts(inpath, outpath):
         '-bsf:a', 'aac_adtstoasc',  # 对于某些AAC音频流，需要添加此选项才能正确合并
         out_path  # 输出文件路径
     ]
-    print(dos)
-    if subprocess.run(ffmpeg_command, text=True).returncode == 0:
+    print(dos_cmd)
+    if subprocess.run(dos_cmd, text=True).returncode == 0:
         print("TS文件合并成功")
     else:
         print("TS文件合并过程中发生错误！")
@@ -169,7 +170,7 @@ def mian():
                     file_name = f"{str(tag)}-{str(tag2)}"
                     file_names.append(file_name)
                     # 将所有的切片文件名拼接，后续用于合并视频
-                    f.write("file '" + file_name + "." + video_url.split(".")[-1] + "'" + "\n")
+                    f.write(f"file '{config.relative_path}" + file_name + "." + video_url.split(".")[-1] + "'" + "\n")
                     # 单线程下载
                     # download_video_1(video_url, headers=config.headers)
                     # 多线程同步下载
@@ -190,10 +191,19 @@ def mian():
 
 if __name__ == '__main__':
     print(f'开始时间：{time.strftime('%X')}')
-    # mian()
-    config = MyFunction.read_file_config()
-    m3u8_url_dirc = get_m3u8_url(config.html_url, config.headers)
-    for key in m3u8_url_dirc.keys():
-        print(m3u8_url_dirc[key])
+    mian()
+
+    # config = MyFunction.read_file_config()
+    # m3u8_url_dirc = get_m3u8_url(config.html_url, config.headers)
+    # for key in m3u8_url_dirc.keys():
+    #     print(m3u8_url_dirc[key])
+
+    # ffmpeg_command = 'ffmpeg -f concat -i C:/Project/PycharmProjects/Python_Instance/resources/input1.txt -c copy C:/Project/PycharmProjects/Python_Instance/resources/video2/1707238312086.mp4'
+    #
+    # if subprocess.run(ffmpeg_command, text=True).returncode == 0:
+    #     print("TS文件合并成功")
+    # else:
+    #     print("TS文件合并过程中发生错误！")
+
     print('程序结束')
     print(f'开始时间：{time.strftime('%X')}')
