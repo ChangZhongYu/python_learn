@@ -8,4 +8,5 @@ class MyConfig:
     input_path = None
     output_path = None
     ts_path = None
+    relative_path = None
     headers = {}

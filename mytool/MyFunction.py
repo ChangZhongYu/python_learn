@@ -33,5 +33,6 @@ class MyFunction:
                 config.input_path = con['input_path']
                 config.output_path = con['output_path']
                 config.ts_path = con['ts_path']
+                config.relative_path = con['relative_path']
                 config.headers = con['headers']
         return config

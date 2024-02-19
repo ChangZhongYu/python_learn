@@ -30,3 +30,5 @@ Error opening input files: Invalid data found when processing input
   ![image-20240205230702134](C:\Users\zhong\AppData\Roaming\Typora\typora-user-images\image-20240205230702134.png)
 
 - 其次是有些视频切片合并时会出问题，尤其是B站的视频，应该和编码参数有关系
+
+2月7日凌晨1点，这他妈的狗逼的相对路径和绝对路径，以及傻逼的字符串异常真的把老子逼疯了！！！！！！！！！！！！！！！！！！！！！！！全他妈莫名其妙
