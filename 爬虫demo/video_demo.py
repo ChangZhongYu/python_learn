@@ -161,7 +161,7 @@ def mian():
 
     config.headers.update({'Referer': 'https://www.yingshi.tv/', 'Origin': 'https://www.yingshi.tv'})
     tag = 1
-    with ThreadPoolExecutor(16) as thread_pool:
+    with ThreadPoolExecutor(4) as thread_pool:
         for video_url_list in videos_url_list:
             with open(config.input_path + f"input{tag}.txt", mode='w') as f:
                 tag2 = 1
